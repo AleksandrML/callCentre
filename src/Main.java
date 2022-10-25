@@ -8,18 +8,23 @@ public class Main {
     protected static final int callGenerationTimeInSec = 1;
     protected static final int timeToTalkInSec = 2;
     protected static final int secToMillisCoefficient = 1_000;  // no magic numbers:)
+    protected static final int workersNumber = 5;
 
 
     public static void main(String[] args) {
         final AtomicInteger processedCallsNumber = new AtomicInteger(0);
+        final AtomicInteger workingWorkersCount = new AtomicInteger(0);
         BlockingQueue<String> calls = new ArrayBlockingQueue<>(callsQuantity);
 
         PhoneStation.generateCalls(callsQuantity, calls, callGenerationTimeInSec * secToMillisCoefficient);
 
         int threadsCreated = 0;
         while (processedCallsNumber.get() < callsQuantity && threadsCreated < callsQuantity) {
-            PhoneStation.processCall(calls, processedCallsNumber, timeToTalkInSec * secToMillisCoefficient);
-            threadsCreated += 1;
+            if (workingWorkersCount.get() < workersNumber) {
+                PhoneStation.processCall(calls, processedCallsNumber,
+                        timeToTalkInSec * secToMillisCoefficient, workingWorkersCount);
+                threadsCreated += 1;
+            }
         }
 
     }

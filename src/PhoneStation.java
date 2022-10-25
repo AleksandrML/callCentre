@@ -18,14 +18,17 @@ public class PhoneStation {
         }).start();
     }
 
-    public static void processCall(BlockingQueue<String> calls, AtomicInteger processedCallsNumber, int timeToTalkInMillis) {
+    public static void processCall(BlockingQueue<String> calls, AtomicInteger processedCallsNumber,
+                                   int timeToTalkInMillis, AtomicInteger workingWorkersCount) {
+        workingWorkersCount.incrementAndGet();
         new Thread(() -> {
             try {
                 System.out.println(Thread.currentThread().getName() + " принял " + calls.take());
                 processedCallsNumber.incrementAndGet();
                 Thread.sleep(timeToTalkInMillis);
+                workingWorkersCount.decrementAndGet();
             } catch (InterruptedException e) {
-                return;
+                workingWorkersCount.decrementAndGet();
             }
         }).start();
     }
