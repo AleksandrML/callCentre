@@ -4,42 +4,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
 
-    final static int callsQuantity = 60;
-    final static int callGenerationTimeInSec = 1;
-    final static int timeToTalkInSec = 2;
-    final static int secToMillisCoefficient = 1_000;  // no magic numbers:)
-    final static int workersNumber = 5;  // no magic numbers:)
+    protected static final int callsQuantity = 60;
+    protected static final int callGenerationTimeInSec = 1;
+    protected static final int timeToTalkInSec = 2;
+    protected static final int secToMillisCoefficient = 1_000;  // no magic numbers:)
 
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         final AtomicInteger processedCallsNumber = new AtomicInteger(0);
         BlockingQueue<String> calls = new ArrayBlockingQueue<>(callsQuantity);
 
-        // атс генерирует звонки:
-        new Thread(() -> {
-            for (int i = 0; i < callsQuantity; i++) {
-                try {
-                    calls.put("Звонок номер " + i);
-                    System.out.println("Поступил звонок номер " + i);
-                    Thread.sleep(callGenerationTimeInSec * secToMillisCoefficient);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
-        }).start();
+        PhoneStation.generateCalls(callsQuantity, calls, callGenerationTimeInSec * secToMillisCoefficient);
 
-        ThreadGroup threadGroup = new ThreadGroup("group of phone workers");
-        for (int i = 0; i < workersNumber; i++) {
-            new ThreadPhoneWorker(threadGroup,
-                    "Оператор " + i, calls,
-                    processedCallsNumber, callsQuantity,
-                    timeToTalkInSec * secToMillisCoefficient).start();
+        int threadsCreated = 0;
+        while (processedCallsNumber.get() < callsQuantity && threadsCreated < callsQuantity) {
+            PhoneStation.processCall(calls, processedCallsNumber, timeToTalkInSec * secToMillisCoefficient);
+            threadsCreated += 1;
         }
-
-        while (processedCallsNumber.get() < callsQuantity) {
-            continue;
-        }
-        threadGroup.interrupt();
 
     }
 }
