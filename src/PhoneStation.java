@@ -1,12 +1,11 @@
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class PhoneStation {
 
     public static void generateCalls(int callsQuantity, BlockingQueue<String> calls, int callGenerationTimeInMillis) {
         // атс генерирует звонки:
         new Thread(() -> {
-            for (int i = 0; i < callsQuantity; i++) {
+            for (int i = 1; i < callsQuantity + 1; i++) {
                 try {
                     calls.put("Звонок номер " + i);
                     System.out.println("Поступил звонок номер " + i);
@@ -14,21 +13,6 @@ public class PhoneStation {
                 } catch (InterruptedException e) {
                     return;
                 }
-            }
-        }).start();
-    }
-
-    public static void processCall(BlockingQueue<String> calls, AtomicInteger processedCallsNumber,
-                                   int timeToTalkInMillis, AtomicInteger workingWorkersCount) {
-        workingWorkersCount.incrementAndGet();
-        new Thread(() -> {
-            try {
-                System.out.println(Thread.currentThread().getName() + " принял " + calls.take());
-                processedCallsNumber.incrementAndGet();
-                Thread.sleep(timeToTalkInMillis);
-                workingWorkersCount.decrementAndGet();
-            } catch (InterruptedException e) {
-                workingWorkersCount.decrementAndGet();
             }
         }).start();
     }

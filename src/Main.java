@@ -1,31 +1,32 @@
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
 
-    protected static final int callsQuantity = 60;
-    protected static final int callGenerationTimeInSec = 1;
-    protected static final int timeToTalkInSec = 2;
-    protected static final int secToMillisCoefficient = 1_000;  // no magic numbers:)
-    protected static final int workersNumber = 5;
+    protected static final int CALLS_QUANTITY = 60;
+    protected static final int CALL_GENERATION_TIME_IN_SEC = 1;
+    protected static final int TIME_TO_TALK_IN_SEC = 2;
+    protected static final int WORKERS_NUMBER = 5;
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         final AtomicInteger processedCallsNumber = new AtomicInteger(0);
-        final AtomicInteger workingWorkersCount = new AtomicInteger(0);
-        BlockingQueue<String> calls = new ArrayBlockingQueue<>(callsQuantity);
+        BlockingQueue<String> calls = new ArrayBlockingQueue<>(CALLS_QUANTITY);
 
-        PhoneStation.generateCalls(callsQuantity, calls, callGenerationTimeInSec * secToMillisCoefficient);
+        ThreadGroup threadGroup = new ThreadGroup("group");
 
-        int threadsCreated = 0;
-        while (processedCallsNumber.get() < callsQuantity && threadsCreated < callsQuantity) {
-            if (workingWorkersCount.get() < workersNumber) {
-                PhoneStation.processCall(calls, processedCallsNumber,
-                        timeToTalkInSec * secToMillisCoefficient, workingWorkersCount);
-                threadsCreated += 1;
-            }
+        for (int i = 1; i < WORKERS_NUMBER + 1; i++) {
+            new CallCenterOperator(threadGroup, "Оператор-тред " + i, calls, processedCallsNumber, TIME_TO_TALK_IN_SEC).start();
         }
 
+        PhoneStation.generateCalls(CALLS_QUANTITY, calls, 1000* CALL_GENERATION_TIME_IN_SEC);
+
+        while (processedCallsNumber.get() < CALLS_QUANTITY) {
+            continue;
+            }
+        threadGroup.interrupt();
     }
+
 }
