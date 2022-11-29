@@ -1,31 +1,23 @@
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-class CallCenterOperator extends Thread {
 
-    final AtomicInteger processedCallsNumber;
-    final BlockingQueue<String> calls;
-    final int timeToTalkInMillis;
+public class CallCenterOperator {
 
-    public CallCenterOperator(ThreadGroup threadGroup, String threadName, BlockingQueue<String> calls,
-                              AtomicInteger processedCallsNumber,
-                              int timeToTalkInSeconds) {
-        super(threadGroup, threadName);
-        this.calls = calls;
-        this.processedCallsNumber = processedCallsNumber;
+    protected final int timeToTalkInMillis;
+    protected final String operatorName;
+
+    public CallCenterOperator(int timeToTalkInSeconds, String operatorName) {
         this.timeToTalkInMillis = 1000*timeToTalkInSeconds;
+        this.operatorName = operatorName;
     }
 
-    @Override
-    public void run() {
-        while (!isInterrupted()) {
+    public void processCall(String call) {
+        new Thread(() -> {
             try {
-                System.out.println(Thread.currentThread().getName() + " принял " + calls.take());
-                processedCallsNumber.incrementAndGet();
+                System.out.println(operatorName + " принял " + call);
                 Thread.sleep(timeToTalkInMillis);
             } catch (InterruptedException e) {
-                return;
+                System.out.println(operatorName + " был прерван на звонке " + call);
             }
-        }
+        }).start();
     }
 
 }
